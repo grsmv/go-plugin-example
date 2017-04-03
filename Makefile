@@ -1,4 +1,10 @@
 .PHONY:build_plugin
 
-build_plugin: plugin.go
-	go build -buildmode=plugin $<
+PLUGIN_DIR := plugins
+PLUGINS := $(foreach dir,$(PLUGIN_DIR),$(wildcard $(dir)/*.go))
+
+build_plugins: $(PLUGINS)
+	for file in $(PLUGINS); do \
+		go build -buildmode=plugin -o plugins-build/$$(basename $$file).so $$file; \
+	done
+
