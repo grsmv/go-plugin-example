@@ -17,7 +17,7 @@ type internalPlugin struct {
 // callHandler calls handler function, stored in given plugin
 func (pl internalPlugin) callHandler(ctx context.Context, data models.Data) models.Data {
 	fn := getFunction(pl.name, "Handler")
-	updatedData := fn.(pluginHandlerFuncType)(ctx, data)
+	updatedData := fn.(func(context.Context, models.Data)models.Data)(ctx, data)
 	return updatedData
 }
 
@@ -48,23 +48,17 @@ func initPlugins() (pls internalPlugins) {
 
 // processPipeline
 func (pls internalPlugins) processPipeline(data models.Data) models.Data {
-	var updatedData models.Data
+	var updatedData = data
 	for _, pl := range pls {
-		updatedData = pl.callHandler(context.Background(), data)
+		updatedData = pl.callHandler(context.Background(), updatedData)
 	}
 	return updatedData
 }
 
-// type aliases for internal plugin functions
-type (
-	pluginWeightFuncType  func() int
-	pluginHandlerFuncType func(context.Context, models.Data) models.Data
-)
-
 // pluginWeight extracts weight info from plugin
 func getPluginWeight(pluginName string) int {
 	fn := getFunction(pluginName, "Weight")
-	weight := fn.(pluginWeightFuncType)()
+	weight := fn.(func()int)()
 	return weight
 }
 
