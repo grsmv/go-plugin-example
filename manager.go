@@ -1,8 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
-	"path/filepath"
+	//"io/ioutil"
+	//"path/filepath"
 )
 
 const (
@@ -11,11 +11,8 @@ const (
 )
 
 func main() {
-	files, _ := ioutil.ReadDir(PluginsFolder)
-	for _, f := range files {
-		if filepath.Ext(f.Name()) == PluginExtension {
-			println(pluginWeight(f.Name()))
-		}
+	plugins := initPlugins()
+	for _, pl := range plugins {
+		println(pl.weight, pl.name)
 	}
 }
-
