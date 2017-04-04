@@ -1,15 +1,24 @@
 package main
 
 import (
+	"context"
+	"go-plugin-example/models"
+	"io/ioutil"
 	"path/filepath"
 	"plugin"
-	"io/ioutil"
 	"sort"
 )
 
 type internalPlugin struct {
 	name   string
 	weight int
+}
+
+// callHandler calls handler function, stored in given plugin
+func (pl internalPlugin) callHandler(ctx context.Context, data models.Data) models.Data {
+	fn := getFunction(pl.name, "Handler")
+	updatedData := fn.(pluginHandlerFuncType)(ctx, data)
+	return updatedData
 }
 
 type internalPlugins []internalPlugin
@@ -22,8 +31,8 @@ func initPlugins() (pls internalPlugins) {
 	for _, f := range files {
 		if filepath.Ext(f.Name()) == PluginExtension {
 			pls = append(pls, internalPlugin{
-				name: f.Name(),
-				weight: pluginWeight(f.Name()),
+				name:   f.Name(),
+				weight: getPluginWeight(f.Name()),
 			})
 		}
 	}
@@ -37,10 +46,25 @@ func initPlugins() (pls internalPlugins) {
 	return
 }
 
+// processPipeline
+func (pls internalPlugins) processPipeline(data models.Data) models.Data {
+	var updatedData models.Data
+	for _, pl := range pls {
+		updatedData = pl.callHandler(context.Background(), data)
+	}
+	return updatedData
+}
+
+// type aliases for internal plugin functions
+type (
+	pluginWeightFuncType  func() int
+	pluginHandlerFuncType func(context.Context, models.Data) models.Data
+)
+
 // pluginWeight extracts weight info from plugin
-func pluginWeight(pluginName string) int {
+func getPluginWeight(pluginName string) int {
 	fn := getFunction(pluginName, "Weight")
-	weight := fn.(func() int)()
+	weight := fn.(pluginWeightFuncType)()
 	return weight
 }
 
