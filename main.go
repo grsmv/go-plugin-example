@@ -11,14 +11,14 @@ const (
 )
 
 func main() {
-	var (
-		plugins       = initPlugins()
-		initialData   = models.Data{A: 1}
-		processedData = plugins.processPipeline(context.Background(), initialData)
-	)
+
+	var plugins = initPlugins()
 
 	// running plugin updater
 	go initPluginUpdater()
+
+	var initialData = models.Data{A: 1}
+	var processedData = plugins.processPipeline(context.Background(), initialData)
 
 	println(processedData.A)
 }
