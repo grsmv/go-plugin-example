@@ -5,12 +5,12 @@ import (
 	"github.com/howeyc/fsnotify"
 	"go-plugin-example/models"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 	"plugin"
 	"sort"
 	"strings"
 	"sync"
-	"log"
 )
 
 type internalPlugin struct {
@@ -28,12 +28,12 @@ func (pl internalPlugin) callHandler(ctx context.Context, data models.Data) mode
 	return updatedData
 }
 
-type internalPlugins []internalPlugin
+type pluginRepository []internalPlugin
 
 var pluginsLock = &sync.Mutex{}
 
 // initPlugins returns sorted slice with detected plugins
-func initPlugins() (pls internalPlugins) {
+func initPlugins() (pls pluginRepository) {
 
 	pluginsLock.Lock()
 
@@ -57,15 +57,13 @@ func initPlugins() (pls internalPlugins) {
 		})
 	}
 
-	defer func() {
-		pluginsLock.Unlock()
-	}()
+	defer pluginsLock.Unlock()
 
 	return
 }
 
 // processPipeline
-func (pls internalPlugins) processPipeline(ctx context.Context, data models.Data) models.Data {
+func (pls pluginRepository) processPipeline(ctx context.Context, data models.Data) models.Data {
 
 	pluginsLock.Lock()
 
@@ -74,9 +72,7 @@ func (pls internalPlugins) processPipeline(ctx context.Context, data models.Data
 		updatedData = pl.callHandler(ctx, updatedData)
 	}
 
-	defer func() {
-		pluginsLock.Unlock()
-	}()
+	defer pluginsLock.Unlock()
 
 	return updatedData
 }
