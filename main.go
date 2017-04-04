@@ -1,7 +1,9 @@
 package main
 
-import ()
-import "go-plugin-example/models"
+import (
+	"context"
+	"go-plugin-example/models"
+)
 
 const (
 	PluginsFolder   = "plugins-build"
@@ -10,11 +12,10 @@ const (
 
 func main() {
 	var (
-		plugins     = initPlugins()
-		initialData = models.Data{
-			A: 1,
-		}
+		plugins       = initPlugins()
+		initialData   = models.Data{A: 1}
+		processedData = plugins.processPipeline(context.Background(), initialData)
 	)
 
-	println(plugins.processPipeline(initialData).A)
+	println(processedData.A)
 }
