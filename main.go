@@ -17,5 +17,8 @@ func main() {
 		processedData = plugins.processPipeline(context.Background(), initialData)
 	)
 
+	// running plugin updater
+	go initPluginUpdater()
+
 	println(processedData.A)
 }

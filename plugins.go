@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"github.com/howeyc/fsnotify"
 	"go-plugin-example/models"
 	"io/ioutil"
 	"path/filepath"
 	"plugin"
 	"sort"
+	"strings"
+	"sync"
 )
 
 type internalPlugin struct {
@@ -26,8 +29,12 @@ func (pl internalPlugin) callHandler(ctx context.Context, data models.Data) mode
 
 type internalPlugins []internalPlugin
 
+var pluginsLock = &sync.Mutex{}
+
 // initPlugins returns sorted slice with detected plugins
 func initPlugins() (pls internalPlugins) {
+
+	pluginsLock.Lock()
 
 	// finding plugins
 	files, _ := ioutil.ReadDir(PluginsFolder)
@@ -46,15 +53,28 @@ func initPlugins() (pls internalPlugins) {
 			return pls[a].weight >= pls[b].weight
 		})
 	}
+
+	defer func() {
+		pluginsLock.Unlock()
+	}()
+
 	return
 }
 
 // processPipeline
 func (pls internalPlugins) processPipeline(ctx context.Context, data models.Data) models.Data {
+
+	pluginsLock.Lock()
+
 	var updatedData = data
 	for _, pl := range pls {
 		updatedData = pl.callHandler(ctx, updatedData)
 	}
+
+	defer func() {
+		pluginsLock.Unlock()
+	}()
+
 	return updatedData
 }
 
@@ -70,4 +90,29 @@ func getFunction(pluginName, functionName string) plugin.Symbol {
 	p, _ := plugin.Open(filepath.Join(PluginsFolder, pluginName))
 	function, _ := p.Lookup(functionName)
 	return function
+}
+
+// initPluginUpdater
+func initPluginUpdater() {
+	watcher, _ := fsnotify.NewWatcher()
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case ev := <-watcher.Event:
+				if strings.HasSuffix(ev.Name, PluginExtension) {
+					println("plugins should be updated")
+					initPlugins()
+				}
+				//case err := <- watcher.Error:
+				//	log.Println("error:", err)
+			}
+		}
+	}()
+
+	watcher.Watch("plugins-build")
+	<-done // hanging
+
+	watcher.Close()
 }
