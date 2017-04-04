@@ -37,6 +37,8 @@ func initPlugins() (pls internalPlugins) {
 
 	pluginsLock.Lock()
 
+	log.Println("(re)building plugin list")
+
 	// finding plugins
 	files, _ := ioutil.ReadDir(PluginsFolder)
 	for _, f := range files {
