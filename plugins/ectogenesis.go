@@ -11,6 +11,6 @@ func Weight() int {
 }
 
 func Handler(ctx context.Context, data models.Data) (models.Data, error) {
-	time.Sleep(1 * time.Minute)
+	time.Sleep(20 * time.Second)
 	return models.Data{A: data.A + 10}, nil
 }
