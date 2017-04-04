@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"path/filepath"
-	"plugin"
 )
 
 const (
@@ -20,14 +19,3 @@ func main() {
 	}
 }
 
-func pluginWeight(pluginName string) int {
-	fn := getFunction(pluginName, "Weight")
-	weight := fn.(func() int)()
-	return weight
-}
-
-func getFunction(pluginName, functionName string) plugin.Symbol {
-	p, _ := plugin.Open(filepath.Join(PluginsFolder, pluginName))
-	function, _ := p.Lookup(functionName)
-	return function
-}
