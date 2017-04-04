@@ -6,3 +6,6 @@ build_plugins: $(PLUGINS)
 	for file in $(PLUGINS); do \
 		go build -buildmode=plugin -o plugins-build/$$(basename $$file).so $$file; \
 	done
+
+clean:
+	rm plugins-build/*.so

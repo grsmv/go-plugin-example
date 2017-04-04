@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"log"
 )
 
 type internalPlugin struct {
@@ -94,6 +95,8 @@ func getFunction(pluginName, functionName string) plugin.Symbol {
 
 // initPluginUpdater
 func initPluginUpdater() {
+	log.Println("launching plugin watcher")
+
 	watcher, _ := fsnotify.NewWatcher()
 	done := make(chan bool)
 
@@ -101,8 +104,9 @@ func initPluginUpdater() {
 		for {
 			select {
 			case ev := <-watcher.Event:
+				log.Println("some updates detected")
 				if strings.HasSuffix(ev.Name, PluginExtension) {
-					println("plugins should be updated")
+					log.Println("plugins should be updated")
 					initPlugins()
 				}
 				//case err := <- watcher.Error:
@@ -111,7 +115,7 @@ func initPluginUpdater() {
 		}
 	}()
 
-	watcher.Watch("plugins-build")
+	watcher.Watch(PluginsFolder)
 	<-done // hanging
 
 	watcher.Close()
