@@ -9,6 +9,6 @@ func Weight() int {
 	return 10
 }
 
-func Handler(ctx context.Context, data models.Data) models.Data {
-	return models.Data{A: data.A + 100}
+func Handler(ctx context.Context, data models.Data) (models.Data, error) {
+	return models.Data{A: data.A + 100}, nil
 }

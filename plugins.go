@@ -17,7 +17,10 @@ type internalPlugin struct {
 // callHandler calls handler function, stored in given plugin
 func (pl internalPlugin) callHandler(ctx context.Context, data models.Data) models.Data {
 	fn := getFunction(pl.name, "Handler")
-	updatedData := fn.(func(context.Context, models.Data) models.Data)(ctx, data)
+	updatedData, err := fn.(func(context.Context, models.Data) (models.Data, error))(ctx, data)
+	if err != nil {
+		return data
+	}
 	return updatedData
 }
 
